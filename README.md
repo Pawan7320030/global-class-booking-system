@@ -1,10 +1,24 @@
 # Global Class Booking System
 
+Backend service for a global live-learning platform where teachers create class offerings, add sessions, and parents book full offerings. The system supports timezone conversion, booking conflict detection, and concurrency-safe booking.
+
+---
+
+## GitHub Repository
+
+```text
+https://github.com/Pawan7320030/global-class-booking-system
+```
+
+---
+
 ## Project Overview
 
-This is a backend service for a global live-learning platform where teachers can create course offerings and add multiple sessions. Parents can view available offerings, book an entire offering, and view their booked offerings.
+Teachers can create course offerings such as Saturday Batch, Weekday Camp, or Evening Batch. Each offering contains multiple sessions.
 
-The system handles timezone conversion, booking conflict detection, and concurrent booking attempts.
+Parents/students can view available offerings, book an entire offering, and view their booked offerings.
+
+The system stores all session times in UTC and converts them into the teacher or parent timezone while displaying the response.
 
 ---
 
@@ -28,37 +42,127 @@ The system handles timezone conversion, booking conflict detection, and concurre
 
 - Create offering
 - Add sessions to offering
-- View teacher offerings and sessions
+- View teacher offerings with sessions
 
 ### Parent APIs
 
 - View available offerings
-- Book offering at offering level
+- Book complete offering
 - View booked offerings
 - Prevent overlapping bookings
-- Show session timings in parent timezone
+- Display session timings in parent timezone
+
+### Engineering Features
+
+- Clean layered architecture
+- DTO-based request and response handling
+- Global exception handling
+- UTC-based timezone handling
+- Conflict detection using session overlap logic
+- Concurrency-safe booking using pessimistic locking
 
 ---
 
-## Database Tables
-
-- `users` - stores teacher and parent details
-- `courses` - stores course details
-- `offerings` - stores class offering or section details
-- `class_sessions` - stores session timings in UTC
-- `bookings` - stores parent bookings
-
-Database schema file is available at:
+## Project Structure
 
 ```text
-src/main/resources/schema.sql
+global-class-booking-system
+│
+├── postman
+│   └── Global-Class-Booking-System.postman_collection.json
+│
+├── src
+│   └── main
+│       ├── java
+│       │   └── com
+│       │       └── global_class_booking_system
+│       │           ├── controller
+│       │           ├── dto
+│       │           │   ├── request
+│       │           │   └── response
+│       │           ├── entity
+│       │           │   └── enums
+│       │           ├── exception
+│       │           ├── repository
+│       │           ├── service
+│       │           └── GlobalClassBookingSystemApplication.java
+│       │
+│       └── resources
+│           ├── application.properties
+│           ├── schema.sql
+│           └── data.sql
+│
+├── .gitignore
+├── pom.xml
+└── README.md
 ```
 
-Sample data file is available at:
+---
 
-```text
-src/main/resources/data.sql
-```
+## Database Schema Overview
+
+### users
+
+Stores teacher and parent details.
+
+Important fields:
+
+- id
+- name
+- email
+- role
+- timezone
+- created_at
+
+### courses
+
+Stores course/class details.
+
+Important fields:
+
+- id
+- title
+- description
+- created_at
+
+### offerings
+
+Stores schedulable course sections.
+
+Important fields:
+
+- id
+- title
+- teacher_timezone
+- capacity
+- booked_count
+- course_id
+- teacher_id
+- created_at
+
+### class_sessions
+
+Stores actual meeting times of an offering.
+
+Important fields:
+
+- id
+- start_time_utc
+- end_time_utc
+- offering_id
+- teacher_id
+
+### bookings
+
+Stores parent bookings at offering level.
+
+Important fields:
+
+- id
+- parent_id
+- offering_id
+- status
+- created_at
 
 ---
 
@@ -67,7 +171,7 @@ src/main/resources/data.sql
 ### 1. Clone Repository
 
 ```bash
-git clone <your-github-repository-link>
+git clone https://github.com/Pawan7320030/global-class-booking-system.git
 cd global-class-booking-system
 ```
 
@@ -77,7 +181,7 @@ cd global-class-booking-system
 CREATE DATABASE global_class_booking;
 ```
 
-### 3. Update Database Configuration
+### 3. Configure Database
 
 Open:
 
@@ -93,9 +197,28 @@ spring.datasource.username=root
 spring.datasource.password=your_mysql_password
 ```
 
+Example full configuration:
+
+```properties
+spring.application.name=global-class-booking-system
+
+server.port=8080
+
+spring.datasource.url=jdbc:mysql://localhost:3306/global_class_booking
+spring.datasource.username=root
+spring.datasource.password=your_mysql_password
+
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
+
+spring.sql.init.mode=always
+spring.jpa.defer-datasource-initialization=true
+```
+
 ### 4. Run Application
 
-Run the main class:
+Run the main class from IntelliJ:
 
 ```text
 GlobalClassBookingSystemApplication.java
@@ -107,10 +230,34 @@ Or run from terminal:
 mvn spring-boot:run
 ```
 
-Application will start on:
+Application will start at:
 
 ```text
 http://localhost:8080
+```
+
+---
+
+## Sample Data
+
+Sample data is available in:
+
+```text
+src/main/resources/data.sql
+```
+
+Sample users:
+
+```text
+Teacher ID: 1
+Parent ID: 2
+```
+
+Sample courses:
+
+```text
+Course ID: 1 - Minecraft Coding
+Course ID: 2 - Roblox Game Design
 ```
 
 ---
@@ -123,10 +270,20 @@ Base URL:
 http://localhost:8080
 ```
 
-### Create Offering
+---
+
+## Teacher APIs
+
+### 1. Create Offering
 
 ```http
 POST /api/teacher/offerings
+```
+
+Full URL:
+
+```text
+http://localhost:8080/api/teacher/offerings
 ```
 
 Request:
@@ -141,10 +298,27 @@ Request:
 }
 ```
 
-### Add Sessions
+Success Response:
+
+```json
+{
+  "offeringId": 1,
+  "message": "Offering created successfully"
+}
+```
+
+---
+
+### 2. Add Sessions to Offering
 
 ```http
-POST /api/teacher/offerings/1/sessions
+POST /api/teacher/offerings/{offeringId}/sessions
+```
+
+Full URL:
+
+```text
+http://localhost:8080/api/teacher/offerings/1/sessions
 ```
 
 Request:
@@ -169,22 +343,60 @@ Request:
 }
 ```
 
-### Get Teacher Offerings
+Success Response:
 
-```http
-GET /api/teacher/1/offerings
+```json
+{
+  "message": "Sessions added successfully"
+}
 ```
 
-### Get Available Offerings for Parent
+---
+
+### 3. Get Teacher Offerings
 
 ```http
-GET /api/parent/2/offerings
+GET /api/teacher/{teacherId}/offerings
 ```
 
-### Book Offering
+Full URL:
+
+```text
+http://localhost:8080/api/teacher/1/offerings
+```
+
+This response displays sessions in the teacher timezone.
+
+---
+
+## Parent APIs
+
+### 4. Get Available Offerings
+
+```http
+GET /api/parent/{parentId}/offerings
+```
+
+Full URL:
+
+```text
+http://localhost:8080/api/parent/2/offerings
+```
+
+This response displays sessions in the parent timezone.
+
+---
+
+### 5. Book Offering
 
 ```http
 POST /api/parent/bookings
+```
+
+Full URL:
+
+```text
+http://localhost:8080/api/parent/bookings
 ```
 
 Request:
@@ -196,17 +408,38 @@ Request:
 }
 ```
 
-### Get Parent Bookings
+Success Response:
+
+```json
+{
+  "bookingId": 1,
+  "message": "Offering booked successfully"
+}
+```
+
+---
+
+### 6. Get Parent Bookings
 
 ```http
-GET /api/parent/2/bookings
+GET /api/parent/{parentId}/bookings
 ```
+
+Full URL:
+
+```text
+http://localhost:8080/api/parent/2/bookings
+```
+
+This response returns all confirmed bookings of the parent.
 
 ---
 
 ## Conflict Detection Testing
 
-Create another offering:
+After booking offering `1`, create another offering using course `2`.
+
+### Create Overlapping Offering
 
 ```http
 POST /api/teacher/offerings
@@ -224,7 +457,9 @@ Request:
 }
 ```
 
-Add an overlapping session:
+Assume the new offering ID is `2`.
+
+### Add Overlapping Session
 
 ```http
 POST /api/teacher/offerings/2/sessions
@@ -244,7 +479,13 @@ Request:
 }
 ```
 
-Try booking the second offering:
+This overlaps with offering `1` session:
+
+```text
+2026-06-13T18:00:00 to 2026-06-13T19:00:00
+```
+
+### Try Booking Overlapping Offering
 
 ```http
 POST /api/parent/bookings
@@ -259,7 +500,7 @@ Request:
 }
 ```
 
-Expected error:
+Expected Error Response:
 
 ```json
 {
@@ -281,9 +522,9 @@ Teacher timezone: Asia/Kolkata
 Session time: 2026-06-06T18:00:00 to 2026-06-06T19:00:00
 ```
 
-Before saving, the backend converts teacher local time to UTC and stores UTC time in the database.
+Before saving, the backend converts the teacher local time into UTC and stores UTC time in the database.
 
-When a parent views offerings or bookings, UTC time is converted into the parent's timezone.
+When a parent views available offerings or booked offerings, the backend converts the stored UTC time into the parent's timezone.
 
 Example:
 
@@ -291,7 +532,7 @@ Example:
 Parent timezone: America/New_York
 ```
 
-This ensures correct schedule display for users in different countries.
+This ensures correct schedule display for users from different countries.
 
 ---
 
@@ -299,9 +540,9 @@ This ensures correct schedule display for users in different countries.
 
 Parents book the complete offering, not individual sessions.
 
-Before booking a new offering, the system checks whether any session of the new offering overlaps with any already booked session of the parent.
+Before creating a booking, the system compares every session of the new offering with every already booked session of the parent.
 
-Overlap logic:
+Overlap condition:
 
 ```text
 existing_session.start_time_utc < new_session.end_time_utc
@@ -309,45 +550,101 @@ AND
 existing_session.end_time_utc > new_session.start_time_utc
 ```
 
-If overlap exists, the booking is rejected.
+If any overlap exists, the booking is rejected with a time conflict error.
 
 ---
 
 ## Concurrency Handling Approach
 
-The booking API runs inside a database transaction using `@Transactional`.
+The booking API is executed inside a transaction using:
+
+```java
+@Transactional
+```
 
 During booking:
 
 1. Parent row is locked using pessimistic write lock.
 2. Offering row is locked using pessimistic write lock.
-3. Existing booking and conflict checks are performed.
-4. Capacity is checked.
-5. Booking is created only if all validations pass.
+3. Duplicate booking is checked.
+4. Time conflict is checked.
+5. Capacity is checked.
+6. Booking is created only if all validations pass.
 
-This prevents invalid bookings during simultaneous booking requests.
+This prevents invalid booking records during simultaneous booking attempts.
 
 ---
 
-## Assumptions Made
+## Error Handling
 
-- Teachers and parents already exist in the users table.
-- Courses already exist in the courses table.
-- Parents book the entire offering, not individual sessions.
-- All session times are stored in UTC.
-- Teacher timezone is used while creating sessions.
-- Parent timezone is used while displaying offerings and bookings.
-- A parent cannot book overlapping offerings.
-- A parent cannot book the same offering twice.
+The project uses a global exception handler to return clean error responses.
+
+Common errors:
+
+| Error | Reason |
+|---|---|
+| NOT_FOUND | Course, teacher, parent, or offering not found |
+| BAD_REQUEST | Invalid role, invalid session, duplicate booking, full offering |
+| TIME_CONFLICT | Parent already has an overlapping booking |
+| VALIDATION_ERROR | Required fields are missing or invalid |
 
 ---
 
 ## Postman Collection
 
-Postman collection is included at:
+Postman collection is included in:
 
 ```text
 postman/Global-Class-Booking-System.postman_collection.json
 ```
 
-Import this file in Postman and test all APIs.
+Import this file into Postman and test all APIs.
+
+---
+
+## Assumptions
+
+- Teachers and parents are pre-created in the users table.
+- Courses are pre-created in the courses table.
+- Parents book the entire offering.
+- Parents cannot book individual sessions separately.
+- All session times are stored in UTC.
+- Teacher timezone is used while creating sessions.
+- Parent timezone is used while displaying schedules.
+- A parent cannot book the same offering twice.
+- A parent cannot book overlapping offerings.
+- Capacity is checked during booking.
+
+---
+
+## Screen Recording Checklist
+
+The screen recording should show:
+
+1. Project structure
+2. README file
+3. Application startup
+4. Database tables
+5. Postman collection
+6. Create offering API
+7. Add sessions API
+8. Get teacher offerings API
+9. Get parent offerings API
+10. Book offering API
+11. Get parent bookings API
+12. Conflict detection
+13. Timezone conversion explanation
+14. Concurrency handling explanation
+
+---
+
+## Submission
+
+Submit these links in the Google Form:
+
+```text
+1. GitHub repository link
+2. Screen recording link
+```
+
+Make sure both links are publicly accessible.
