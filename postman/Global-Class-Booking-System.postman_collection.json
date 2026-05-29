@@ -1,0 +1,89 @@
+{
+  "info": {
+    "name": "Global Class Booking System",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Create Offering - Saturday Batch",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"courseId\": 1,\n  \"teacherId\": 1,\n  \"title\": \"Saturday Batch\",\n  \"teacherTimezone\": \"Asia/Kolkata\",\n  \"capacity\": 20\n}"
+        },
+        "url": {"raw": "http://localhost:8080/api/teacher/offerings", "protocol": "http", "host": ["localhost"], "port": "8080", "path": ["api", "teacher", "offerings"]}
+      }
+    },
+    {
+      "name": "Add Sessions - Offering 1",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"teacherId\": 1,\n  \"sessions\": [\n    {\n      \"startTime\": \"2026-06-06T18:00:00\",\n      \"endTime\": \"2026-06-06T19:00:00\"\n    },\n    {\n      \"startTime\": \"2026-06-13T18:00:00\",\n      \"endTime\": \"2026-06-13T19:00:00\"\n    },\n    {\n      \"startTime\": \"2026-06-20T18:00:00\",\n      \"endTime\": \"2026-06-20T19:00:00\"\n    }\n  ]\n}"
+        },
+        "url": {"raw": "http://localhost:8080/api/teacher/offerings/1/sessions", "protocol": "http", "host": ["localhost"], "port": "8080", "path": ["api", "teacher", "offerings", "1", "sessions"]}
+      }
+    },
+    {
+      "name": "Get Teacher Offerings",
+      "request": {
+        "method": "GET",
+        "url": {"raw": "http://localhost:8080/api/teacher/1/offerings", "protocol": "http", "host": ["localhost"], "port": "8080", "path": ["api", "teacher", "1", "offerings"]}
+      }
+    },
+    {
+      "name": "Get Parent Available Offerings",
+      "request": {
+        "method": "GET",
+        "url": {"raw": "http://localhost:8080/api/parent/2/offerings", "protocol": "http", "host": ["localhost"], "port": "8080", "path": ["api", "parent", "2", "offerings"]}
+      }
+    },
+    {
+      "name": "Book Offering 1",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "body": {"mode": "raw", "raw": "{\n  \"parentId\": 2,\n  \"offeringId\": 1\n}"},
+        "url": {"raw": "http://localhost:8080/api/parent/bookings", "protocol": "http", "host": ["localhost"], "port": "8080", "path": ["api", "parent", "bookings"]}
+      }
+    },
+    {
+      "name": "Get Parent Bookings",
+      "request": {
+        "method": "GET",
+        "url": {"raw": "http://localhost:8080/api/parent/2/bookings", "protocol": "http", "host": ["localhost"], "port": "8080", "path": ["api", "parent", "2", "bookings"]}
+      }
+    },
+    {
+      "name": "Create Offering - Overlap Batch",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "body": {"mode": "raw", "raw": "{\n  \"courseId\": 2,\n  \"teacherId\": 1,\n  \"title\": \"Overlap Batch\",\n  \"teacherTimezone\": \"Asia/Kolkata\",\n  \"capacity\": 20\n}"},
+        "url": {"raw": "http://localhost:8080/api/teacher/offerings", "protocol": "http", "host": ["localhost"], "port": "8080", "path": ["api", "teacher", "offerings"]}
+      }
+    },
+    {
+      "name": "Add Overlapping Session - Offering 2",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "body": {"mode": "raw", "raw": "{\n  \"teacherId\": 1,\n  \"sessions\": [\n    {\n      \"startTime\": \"2026-06-13T18:30:00\",\n      \"endTime\": \"2026-06-13T19:30:00\"\n    }\n  ]\n}"},
+        "url": {"raw": "http://localhost:8080/api/teacher/offerings/2/sessions", "protocol": "http", "host": ["localhost"], "port": "8080", "path": ["api", "teacher", "offerings", "2", "sessions"]}
+      }
+    },
+    {
+      "name": "Book Overlapping Offering 2 - Expected Conflict",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "body": {"mode": "raw", "raw": "{\n  \"parentId\": 2,\n  \"offeringId\": 2\n}"},
+        "url": {"raw": "http://localhost:8080/api/parent/bookings", "protocol": "http", "host": ["localhost"], "port": "8080", "path": ["api", "parent", "bookings"]}
+      }
+    }
+  ]
+}
